@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tweet Machine — Acrópole</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --acro-blue: #1B2A6B;
+      --acro-gold: #C9A84C;
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --surface2: #f0efe9;
+      --border: rgba(0,0,0,0.1);
+      --border2: rgba(0,0,0,0.18);
+      --text: #1a1a18;
+      --text2: #5f5e5a;
+      --text3: #888780;
+      --danger: #A32D2D;
+      --danger-bg: #FCEBEB;
+      --success: #3B6D11;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a18;
+        --surface: #242422;
+        --surface2: #2c2c2a;
+        --border: rgba(255,255,255,0.1);
+        --border2: rgba(255,255,255,0.18);
+        --text: #e8e6de;
+        --text2: #9c9a92;
+        --text3: #636158;
+        --danger: #F09595;
+        --danger-bg: #2d1a1a;
+        --success: #97C459;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container { max-width: 680px; margin: 0 auto; }
+
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; }
+    .header-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--acro-blue);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .header-icon i { color: #fff; font-size: 20px; }
+    .header-text h1 { font-size: 18px; font-weight: 600; color: var(--text); }
+    .header-text p { font-size: 13px; color: var(--text2); margin-top: 2px; }
+    .gold-line { height: 2px; width: 36px; background: var(--acro-gold); border-radius: 1px; margin-bottom: 1.5rem; }
+
+    .card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .card-body { padding: 1rem 1.25rem; }
+
+    .tab-row { display: flex; gap: 6px; margin-bottom: 1rem; }
+    .tab {
+      font-size: 13px; padding: 6px 14px;
+      border: 0.5px solid var(--border);
+      border-radius: 20px; cursor: pointer;
+      background: transparent; color: var(--text2);
+      transition: all 0.15s;
+    }
+    .tab.active { background: var(--acro-blue); border-color: var(--acro-blue); color: #fff; }
+
+    .input-panel { display: none; }
+    .input-panel.visible { display: block; }
+
+    textarea, input[type="text"], input[type="url"], select {
+      width: 100%; font-size: 14px; line-height: 1.6;
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface2);
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    textarea { padding: 10px 12px; resize: vertical; min-height: 140px; }
+    input[type="text"], input[type="url"] { height: 40px; padding: 0 12px; }
+    select { height: 36px; padding: 0 10px; }
+    textarea:focus, input:focus, select:focus { border-color: var(--acro-blue); }
+
+    .url-row { display: flex; gap: 8px; }
+    .url-row input { flex: 1; }
+
+    .context-row { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+    .context-label { font-size: 12px; color: var(--text2); white-space: nowrap; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      border-radius: var(--radius-md); transition: all 0.15s;
+      font-family: inherit;
+    }
+    .btn-primary {
+      width: 100%; height: 44px; margin-top: 1rem;
+      background: var(--acro-blue); color: #fff; border: none;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-secondary {
+      height: 30px; padding: 0 10px;
+      background: transparent; color: var(--text2);
+      border: 0.5px solid var(--border2);
+    }
+    .btn-secondary:hover { background: var(--surface2); color: var(--text); }
+    .btn-secondary.active { background: var(--acro-blue); border-color: var(--acro-blue); color: #fff; }
+    .btn-secondary i { font-size: 14px; }
+
+    .btn-fetch {
+      height: 40px; padding: 0 16px;
+      background: transparent; color: var(--text);
+      border: 0.5px solid var(--border2);
+    }
+    .btn-fetch:hover { background: var(--surface2); }
+
+    .result-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 1.25rem;
+      border-bottom: 0.5px solid var(--border);
+      background: var(--surface2);
+    }
+    .result-type { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 500; }
+    .result-type i { font-size: 15px; color: var(--acro-blue); }
+    .header-actions { display: flex; gap: 6px; }
+
+    .tone-badge {
+      font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 400;
+    }
+    .badge-geo { background: rgba(27,42,107,0.1); color: var(--acro-blue); }
+    .badge-cena { background: rgba(59,109,17,0.1); color: #3B6D11; }
+    .badge-pers { background: rgba(133,80,11,0.1); color: #854F0B; }
+    .badge-neutro { background: var(--surface2); color: var(--text2); }
+
+    .tweet-text { font-size: 15px; line-height: 1.65; color: var(--text); white-space: pre-wrap; }
+    .tweet-edit {
+      width: 100%; font-size: 15px; line-height: 1.65; min-height: 80px;
+      padding: 8px 10px; border: 0.5px solid var(--acro-blue);
+      border-radius: var(--radius-md); background: var(--surface2);
+      color: var(--text); font-family: inherit; outline: none; resize: vertical;
+    }
+    .char-count { margin-top: 6px; font-size: 12px; color: var(--text3); }
+    .char-count.over { color: var(--danger); }
+
+    .thread-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+    .thread-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .thread-num {
+      width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%;
+      background: var(--surface2); border: 0.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 500; color: var(--text2); margin-top: 2px;
+    }
+    .thread-content { flex: 1; }
+    .thread-text { font-size: 14px; line-height: 1.65; color: var(--text); white-space: pre-wrap; }
+    .thread-edit {
+      width: 100%; font-size: 14px; line-height: 1.65; min-height: 60px;
+      padding: 6px 10px; border: 0.5px solid var(--acro-blue);
+      border-radius: var(--radius-md); background: var(--surface2);
+      color: var(--text); font-family: inherit; outline: none; resize: vertical;
+    }
+    .thread-char { margin-top: 4px; font-size: 11px; color: var(--text3); }
+    .thread-char.over { color: var(--danger); }
+
+    .feedback-bar {
+      border-top: 0.5px solid var(--border);
+      padding: 10px 1.25rem;
+      background: var(--surface2);
+    }
+    .feedback-row { display: flex; gap: 8px; }
+    .feedback-input {
+      flex: 1; height: 34px; padding: 0 10px; font-size: 13px;
+      border: 0.5px solid var(--border); border-radius: var(--radius-md);
+      background: var(--surface); color: var(--text); font-family: inherit; outline: none;
+    }
+    .feedback-input:focus { border-color: var(--acro-blue); }
+    .feedback-btn {
+      height: 34px; padding: 0 14px; font-size: 13px; font-weight: 500; cursor: pointer;
+      border: none; border-radius: var(--radius-md);
+      background: var(--acro-blue); color: #fff;
+      display: flex; align-items: center; gap: 5px; font-family: inherit;
+    }
+    .feedback-btn:hover { opacity: 0.88; }
+    .feedback-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .feedback-btn i { font-size: 14px; }
+
+    .feedback-hints { display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap; }
+    .hint {
+      font-size: 11px; padding: 3px 9px;
+      border: 0.5px solid var(--border); border-radius: 20px;
+      cursor: pointer; color: var(--text2); background: transparent;
+    }
+    .hint:hover { background: var(--surface); color: var(--text); }
+
+    .loading-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 1rem 0; font-size: 13px; color: var(--text2);
+    }
+    .spinner {
+      width: 14px; height: 14px; flex-shrink: 0;
+      border: 2px solid var(--border);
+      border-top-color: var(--acro-blue);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      font-size: 13px; color: var(--danger); padding: 10px 12px;
+      border: 0.5px solid var(--border); border-radius: var(--radius-md);
+      background: var(--danger-bg); margin-top: 1rem;
+    }
+
+    .url-status { font-size: 12px; color: var(--text2); margin-top: 8px; }
+    .url-status.ok { color: var(--success); }
+    .url-status.err { color: var(--danger); }
+
+    .results { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.25rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-icon"><i class="ti ti-feather"></i></div>
+    <div class="header-text">
+      <h1>Tweet Machine</h1>
+      <p>Ferramenta interna Acrópole — matéria → tweet + thread</p>
+    </div>
+  </div>
+  <div class="gold-line"></div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="tab-row">
+        <button class="tab active" onclick="switchTab('text',event)">
+          <i class="ti ti-align-left"></i> Colar texto
+        </button>
+        <button class="tab" onclick="switchTab('url',event)">
+          <i class="ti ti-link"></i> URL do artigo
+        </button>
+      </div>
+
+      <div id="panel-text" class="input-panel visible">
+        <textarea id="text-input" placeholder="Cole aqui o texto da matéria ou coluna..."></textarea>
+      </div>
+
+      <div id="panel-url" class="input-panel">
+        <div class="url-row">
+          <input type="url" id="url-input" placeholder="https://..." />
+          <button class="btn btn-fetch" onclick="fetchUrl()">
+            <i class="ti ti-download"></i> Buscar
+          </button>
+        </div>
+        <p id="url-status" class="url-status"></p>
+      </div>
+
+      <div class="context-row">
+        <span class="context-label">Conta:</span>
+        <select id="tone-select">
+          <option value="geopoliticahoje">Geopolítica Hoje — provocativo, seco</option>
+          <option value="cena">CENA — analítico, opinativo</option>
+          <option value="persepolisX">Persépolis — imparcial, factual</option>
+          <option value="neutro">Neutro / jornalístico</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" id="gen-btn" onclick="generate()">
+        <i class="ti ti-sparkles"></i> Gerar tweet + thread
+      </button>
+    </div>
+  </div>
+
+  <div id="error-area"></div>
+  <div id="results-area" class="results"></div>
+
+</div>
+
+<script>
+let activeTab = 'text';
+let fetchedContent = '';
+let currentTone = 'geopoliticahoje';
+
+const toneMap = {
+  geopoliticahoje: 'A conta é da Geopolítica Hoje. Tom: provocativo e seco. Frases curtas, diretas. Vai reto ao ponto geopolítico sem rodeios. Pode usar ironia fria. Nada de análise acadêmica — é quase um comentário de ringside. Zero eufemismos, zero linguagem diplomática.',
+  cena: 'A conta é da CENA, veículo de análise política e cultural. Tom: analítico e claramente opinativo. Constrói argumento com precisão e não tem medo de tomar posição. Pode ter sofisticação intelectual sem ser hermético. Evite neutralidade vazia e jargão.',
+  persepolisX: 'A conta é do Persépolis, newsletter de geopolítica. Tom: imparcial e estritamente factual. Registra o que aconteceu e o que está objetivamente em jogo — sem opinião, sem colorido ideológico, sem framing. Preciso, informativo, jornalístico.',
+  neutro: 'Tom jornalístico neutro. Foco em informação clara e objetiva.'
+};
+
+const badgeMap = {
+  geopoliticahoje: '<span class="tone-badge badge-geo">provocativo · seco</span>',
+  cena: '<span class="tone-badge badge-cena">analítico · opinativo</span>',
+  persepolisX: '<span class="tone-badge badge-pers">imparcial · factual</span>',
+  neutro: '<span class="tone-badge badge-neutro">neutro</span>'
+};
+
+// Chama o servidor local
+async function callAPI(messages) {
+  const res = await fetch('/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages })
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || 'Erro no servidor');
+  }
+  return res.json();
+}
+
+function switchTab(tab, e) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  e.target.closest('.tab').classList.add('active');
+  document.getElementById('panel-text').classList.toggle('visible', tab === 'text');
+  document.getElementById('panel-url').classList.toggle('visible', tab === 'url');
+}
+
+async function fetchUrl() {
+  const url = document.getElementById('url-input').value.trim();
+  const status = document.getElementById('url-status');
+  if (!url) return;
+  status.className = 'url-status';
+  status.textContent = 'Buscando conteúdo...';
+  try {
+    const res = await fetch('/api/fetch-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+    if (data.text && data.text.length > 50) {
+      fetchedContent = data.text;
+      status.className = 'url-status ok';
+      status.textContent = `✓ Conteúdo carregado (${data.text.length} chars)`;
+    } else {
+      status.className = 'url-status err';
+      status.textContent = 'Não foi possível extrair o conteúdo. Cole o texto manualmente.';
+    }
+  } catch(e) {
+    status.className = 'url-status err';
+    status.textContent = 'Erro ao buscar URL: ' + e.message;
+  }
+}
+
+function getContent() {
+  return activeTab === 'url' ? fetchedContent : document.getElementById('text-input').value.trim();
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function countChars(str) { return [...str].length; }
+
+function updateCharCount(el, text, limit) {
+  if (!el) return;
+  const n = countChars(text);
+  el.textContent = `${n}/${limit} caracteres${n > limit ? ' — acima do limite' : ''}`;
+  el.classList.toggle('over', n > limit);
+}
+
+async function copyText(btn, getText) {
+  try {
+    await navigator.clipboard.writeText(getText());
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="ti ti-check"></i> Copiado';
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  } catch(e) {}
+}
+
+function toggleEdit(cardId, type) {
+  const card = document.getElementById(cardId);
+  const btn = card.querySelector('.edit-btn');
+  const isEditing = btn.classList.contains('active');
+  if (type === 'tweet') {
+    const display = card.querySelector('.tweet-text');
+    const edit = card.querySelector('.tweet-edit');
+    if (isEditing) {
+      display.textContent = edit.value;
+      display.style.display = '';
+      edit.style.display = 'none';
+      btn.classList.remove('active');
+      btn.innerHTML = '<i class="ti ti-pencil"></i> Editar';
+      updateCharCount(card.querySelector('.char-count'), edit.value, 280);
+    } else {
+      edit.value = display.textContent;
+      display.style.display = 'none';
+      edit.style.display = 'block';
+      edit.focus();
+      btn.classList.add('active');
+      btn.innerHTML = '<i class="ti ti-check"></i> Salvar';
+      edit.oninput = () => updateCharCount(card.querySelector('.char-count'), edit.value, 280);
+    }
+  } else {
+    const items = card.querySelectorAll('.thread-item');
+    if (isEditing) {
+      items.forEach(item => {
+        const txt = item.querySelector('.thread-text');
+        const ed = item.querySelector('.thread-edit');
+        txt.textContent = ed.value;
+        txt.style.display = '';
+        ed.style.display = 'none';
+        updateCharCount(item.querySelector('.thread-char'), ed.value, 280);
+      });
+      btn.classList.remove('active');
+      btn.innerHTML = '<i class="ti ti-pencil"></i> Editar';
+    } else {
+      items.forEach(item => {
+        const txt = item.querySelector('.thread-text');
+        const ed = item.querySelector('.thread-edit');
+        ed.value = txt.textContent;
+        txt.style.display = 'none';
+        ed.style.display = 'block';
+        ed.oninput = () => updateCharCount(item.querySelector('.thread-char'), ed.value, 280);
+      });
+      btn.classList.add('active');
+      btn.innerHTML = '<i class="ti ti-check"></i> Salvar';
+    }
+  }
+}
+
+function setHint(cardId, hint) {
+  const inp = document.getElementById(cardId).querySelector('.feedback-input');
+  if (inp) { inp.value = hint; inp.focus(); }
+}
+
+async function applyFeedback(cardId, type) {
+  const card = document.getElementById(cardId);
+  const inp = card.querySelector('.feedback-input');
+  const fbtn = card.querySelector('.feedback-btn');
+  const instruction = inp.value.trim();
+  if (!instruction) return;
+
+  let currentText = '';
+  if (type === 'tweet') {
+    const ed = card.querySelector('.tweet-edit');
+    const txt = card.querySelector('.tweet-text');
+    currentText = (ed && ed.style.display !== 'none') ? ed.value : txt.textContent;
+  } else {
+    const parts = [];
+    card.querySelectorAll('.thread-item').forEach((item, i) => {
+      const ed = item.querySelector('.thread-edit');
+      const txt = item.querySelector('.thread-text');
+      parts.push(`[${i+1}] ${(ed && ed.style.display !== 'none') ? ed.value : txt.textContent}`);
+    });
+    currentText = parts.join('\n');
+  }
+
+  fbtn.disabled = true;
+  fbtn.innerHTML = '<div class="spinner"></div>';
+  inp.disabled = true;
+
+  const prompt = type === 'tweet'
+    ? `Você é editor de tweets para um veículo de jornalismo político/geopolítica.\n\nTom: ${toneMap[currentTone]}\n\nTweet atual:\n"${currentText}"\n\nInstrução de ajuste: "${instruction}"\n\nRetorne APENAS o tweet revisado, sem aspas, sem explicação, sem markdown. Máximo 280 caracteres.`
+    : `Você é editor de threads para um veículo de jornalismo político/geopolítica.\n\nTom: ${toneMap[currentTone]}\n\nThread atual:\n${currentText}\n\nInstrução de ajuste: "${instruction}"\n\nRetorne APENAS a thread revisada no formato JSON:\n{"thread": ["tweet1","tweet2","tweet3",...]}\n\nSem markdown. Mantenha o mesmo número de tweets, a menos que a instrução peça o contrário. Máximo 280 chars por tweet.`;
+
+  try {
+    const data = await callAPI([{ role: 'user', content: prompt }]);
+    const raw = data.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
+
+    if (type === 'tweet') {
+      const newText = raw.replace(/```[^\n]*\n?/g,'').trim().replace(/^"|"$/g,'');
+      const txt = card.querySelector('.tweet-text');
+      const ed = card.querySelector('.tweet-edit');
+      txt.textContent = newText;
+      if (ed && ed.style.display !== 'none') ed.value = newText;
+      updateCharCount(card.querySelector('.char-count'), newText, 280);
+    } else {
+      const clean = raw.replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(clean);
+      card.querySelectorAll('.thread-item').forEach((item, i) => {
+        if (!parsed.thread[i]) return;
+        const txt = item.querySelector('.thread-text');
+        const ed = item.querySelector('.thread-edit');
+        txt.textContent = parsed.thread[i];
+        if (ed && ed.style.display !== 'none') ed.value = parsed.thread[i];
+        updateCharCount(item.querySelector('.thread-char'), parsed.thread[i], 280);
+      });
+    }
+    inp.value = '';
+  } catch(e) {
+    inp.placeholder = 'Erro — tente novamente';
+  }
+
+  fbtn.disabled = false;
+  fbtn.innerHTML = '<i class="ti ti-arrow-right"></i> Aplicar';
+  inp.disabled = false;
+}
+
+function buildTweetCard(id, text, tone) {
+  const chars = countChars(text);
+  const over = chars > 280;
+  const div = document.createElement('div');
+  div.className = 'card'; div.id = id;
+  div.innerHTML = `
+    <div class="result-header">
+      <span class="result-type"><i class="ti ti-messages"></i> Tweet único${badgeMap[tone]}</span>
+      <div class="header-actions">
+        <button class="btn btn-secondary edit-btn" onclick="toggleEdit('${id}','tweet')"><i class="ti ti-pencil"></i> Editar</button>
+        <button class="btn btn-secondary" onclick="copyText(this, () => { const e=document.getElementById('${id}').querySelector('.tweet-edit'); const t=document.getElementById('${id}').querySelector('.tweet-text'); return (e&&e.style.display!=='none')?e.value:t.textContent; })"><i class="ti ti-copy"></i> Copiar</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <p class="tweet-text">${escHtml(text)}</p>
+      <textarea class="tweet-edit" style="display:none"></textarea>
+      <p class="char-count ${over?'over':''}">${chars}/280 caracteres${over?' — acima do limite':''}</p>
+    </div>
+    <div class="feedback-bar">
+      <div class="feedback-row">
+        <input class="feedback-input" type="text" placeholder="Ex: deixa mais seco, remove a hashtag, reescreve o gancho..." />
+        <button class="feedback-btn" onclick="applyFeedback('${id}','tweet')"><i class="ti ti-arrow-right"></i> Aplicar</button>
+      </div>
+      <div class="feedback-hints">
+        <span class="hint" onclick="setHint('${id}','deixa mais seco')">mais seco</span>
+        <span class="hint" onclick="setHint('${id}','remove a hashtag')">sem hashtag</span>
+        <span class="hint" onclick="setHint('${id}','reescreve mais provocativo')">mais provocativo</span>
+        <span class="hint" onclick="setHint('${id}','encurta para menos de 240 caracteres')">encurtar</span>
+        <span class="hint" onclick="setHint('${id}','troca o gancho por algo mais impactante')">novo gancho</span>
+      </div>
+    </div>`;
+  return div;
+}
+
+function buildThreadCard(id, tweets, tone) {
+  const div = document.createElement('div');
+  div.className = 'card'; div.id = id;
+  const itemsHtml = tweets.map((t, i) => {
+    const c = countChars(t);
+    return `<div class="thread-item">
+      <div class="thread-num">${i+1}</div>
+      <div class="thread-content">
+        <p class="thread-text">${escHtml(t)}</p>
+        <textarea class="thread-edit" style="display:none"></textarea>
+        <p class="thread-char">${c}/280 caracteres</p>
+      </div>
+    </div>`;
+  }).join('');
+  div.innerHTML = `
+    <div class="result-header">
+      <span class="result-type"><i class="ti ti-list"></i> Thread (${tweets.length} tweets)${badgeMap[tone]}</span>
+      <div class="header-actions">
+        <button class="btn btn-secondary edit-btn" onclick="toggleEdit('${id}','thread')"><i class="ti ti-pencil"></i> Editar</button>
+        <button class="btn btn-secondary" onclick="copyText(this, () => { const items=document.getElementById('${id}').querySelectorAll('.thread-item'); const parts=[]; items.forEach(item=>{const e=item.querySelector('.thread-edit');const t=item.querySelector('.thread-text');parts.push((e&&e.style.display!=='none')?e.value:t.textContent);}); return parts.join('\\n\\n'); })"><i class="ti ti-copy"></i> Copiar tudo</button>
+      </div>
+    </div>
+    <div class="card-body">${itemsHtml}</div>
+    <div class="feedback-bar">
+      <div class="feedback-row">
+        <input class="feedback-input" type="text" placeholder="Ex: reescreve o tweet 1, deixa a thread mais curta, tom mais direto..." />
+        <button class="feedback-btn" onclick="applyFeedback('${id}','thread')"><i class="ti ti-arrow-right"></i> Aplicar</button>
+      </div>
+      <div class="feedback-hints">
+        <span class="hint" onclick="setHint('${id}','reescreve o tweet 1 com um gancho mais forte')">gancho mais forte</span>
+        <span class="hint" onclick="setHint('${id}','deixa a thread mais curta, 3 tweets')">encurtar</span>
+        <span class="hint" onclick="setHint('${id}','tom mais seco em todos os tweets')">mais seco</span>
+        <span class="hint" onclick="setHint('${id}','reescreve o último tweet com uma conclusão mais impactante')">conclusão melhor</span>
+      </div>
+    </div>`;
+  return div;
+}
+
+async function generate() {
+  const content = getContent();
+  const errArea = document.getElementById('error-area');
+  errArea.innerHTML = '';
+  if (!content || content.length < 80) {
+    errArea.innerHTML = '<p class="error-msg">Insira um texto mais longo (mínimo ~80 caracteres) ou busque uma URL primeiro.</p>';
+    return;
+  }
+  currentTone = document.getElementById('tone-select').value;
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Gerando...';
+
+  const area = document.getElementById('results-area');
+  area.innerHTML = `
+    <div class="card">
+      <div class="result-header"><span class="result-type"><i class="ti ti-messages"></i> Tweet único${badgeMap[currentTone]}</span></div>
+      <div class="card-body"><div class="loading-row"><div class="spinner"></div><span>Gerando...</span></div></div>
+    </div>
+    <div class="card">
+      <div class="result-header"><span class="result-type"><i class="ti ti-list"></i> Thread${badgeMap[currentTone]}</span></div>
+      <div class="card-body"><div class="loading-row"><div class="spinner"></div><span>Gerando...</span></div></div>
+    </div>`;
+
+  const prompt = `Você é especialista em comunicação no X (Twitter) para veículos de jornalismo político e geopolítica.\n\n${toneMap[currentTone]}\n\nA partir do texto abaixo, produza APENAS um JSON válido no formato a seguir, sem markdown, sem explicação:\n\n{"tweet":"tweet único até 280 chars","thread":["tweet1","tweet2","tweet3","tweet4","tweet5"]}\n\nRegras:\n- Máximo 280 caracteres por tweet\n- Sem numeração como "1/" nos textos\n- Sem "vale lembrar que", "é importante destacar", "não por acaso"\n- Thread mínimo 3 tweets, máximo 5\n\nTEXTO:\n${content.slice(0,4000)}`;
+
+  try {
+    const data = await callAPI([{ role: 'user', content: prompt }]);
+    const raw = data.content?.filter(b => b.type === 'text').map(b => b.text).join('') || '';
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    const ts = Date.now();
+    area.innerHTML = '';
+    area.appendChild(buildTweetCard('card-tweet-'+ts, parsed.tweet, currentTone));
+    area.appendChild(buildThreadCard('card-thread-'+ts, parsed.thread, currentTone));
+  } catch(e) {
+    area.innerHTML = `<p class="error-msg">Erro: ${e.message}. Tente novamente.</p>`;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-sparkles"></i> Gerar novamente';
+}
+</script>
+</body>
+</html>
